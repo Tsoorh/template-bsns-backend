@@ -73,9 +73,22 @@ const INITIAL_MOCK_PRODUCTS: FullProduct[] = [
     }
 ];
 
+const INITIAL_MOCK_USERS: User[] = [
+    {
+        _id: 'user_admin',
+        id: 'user_admin',
+        username: 'admin@template.com',
+        fullname: 'Template Store Admin',
+        role: 'admin',
+        password: '$2b$11$3A37jqqc0i8wThwJ/iX0huAd7wJ1w/ikwv8u.WiaB.lMbHPCU8Bma', // 'Admin123!'
+        priceMultiplier: 1.0,
+        showPrices: true
+    }
+];
+
 const mockStore: MockDatabase = {
     products: [...INITIAL_MOCK_PRODUCTS],
-    users: [],
+    users: [...INITIAL_MOCK_USERS],
     siteMedia: {
         homepage_media: { ...DEFAULT_SITE_MEDIA }
     },
@@ -85,6 +98,25 @@ const mockStore: MockDatabase = {
 };
 
 export const mockDbService = {
+    getUsers: () => mockStore.users,
+    getUserById: (id: string) => mockStore.users.find(u => u._id === id || u.id === id) || null,
+    getUserByUsername: (username: string) => mockStore.users.find(u => u.username?.toLowerCase() === username.toLowerCase()) || null,
+    addUser: (user: User) => {
+        const newUser = { ...user, id: user.id || `user_${Date.now()}`, _id: user._id || `user_${Date.now()}` };
+        mockStore.users.push(newUser);
+        return newUser;
+    },
+    updateUser: (user: User) => {
+        const idx = mockStore.users.findIndex(u => u._id === user._id || u.id === user.id);
+        if (idx !== -1) {
+            mockStore.users[idx] = { ...mockStore.users[idx], ...user };
+            return mockStore.users[idx];
+        }
+        return user;
+    },
+    removeUser: (id: string) => {
+        mockStore.users = mockStore.users.filter(u => u._id !== id && u.id !== id);
+    },
     getProducts: () => mockStore.products,
     getProductById: (id: string) => mockStore.products.find(p => p._id === id || p.id === id) || null,
     addProduct: (product: FullProduct) => {

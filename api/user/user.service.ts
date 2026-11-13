@@ -1,8 +1,9 @@
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { dbService } from '../../services/db.service';
+import { mockDbService } from '../../services/mock-db.service';
 import { loggerService } from '../../services/logger.service';
-import type { Miniuser, User } from '../../model/user.model';
+import type { Miniuser, Role, User } from '../../model/user.model';
 
 const SALTROUNDS = Number(process.env.SALT_ROUNDS) || 11;
 
@@ -31,6 +32,10 @@ function _mapRowToUser(row: Record<string, any>): User {
 }
 
 async function query(): Promise<Miniuser[]> {
+    if (dbService.isMockMode()) {
+        return mockDbService.getUsers().map(u => convertUserToMiniUser(u));
+    }
+
     try {
         const sql = `
             SELECT id, username, fullname, role, price_multiplier, show_prices, password 
@@ -46,6 +51,10 @@ async function query(): Promise<Miniuser[]> {
 }
 
 async function getByUsername(username: string): Promise<User | null> {
+    if (dbService.isMockMode()) {
+        return mockDbService.getUserByUsername(username);
+    }
+
     try {
         const sql = `
             SELECT id, username, fullname, role, price_multiplier, show_prices, password 
@@ -62,6 +71,11 @@ async function getByUsername(username: string): Promise<User | null> {
 }
 
 async function getById(userId: string): Promise<Miniuser | null> {
+    if (dbService.isMockMode()) {
+        const user = mockDbService.getUserById(userId);
+        return user ? convertUserToMiniUser(user) : null;
+    }
+
     try {
         const sql = `
             SELECT id, username, fullname, role, price_multiplier, show_prices, password 
@@ -78,12 +92,35 @@ async function getById(userId: string): Promise<Miniuser | null> {
 }
 
 async function add(user: User): Promise<User> {
+    if (dbService.isMockMode()) {
+        let passwordHash = user.password;
+        if (passwordHash) {
+            passwordHash = await bcrypt.hash(passwordHash, SALTROUNDS);
+        }
+        const role: Role = (user.role ? user.role.trim().toLowerCase() : 'client') as Role;
+        const id = user._id || user.id || crypto.randomBytes(12).toString('hex');
+        const priceMultiplier = user.priceMultiplier !== undefined ? user.priceMultiplier : 1.0;
+        const showPrices = user.showPrices !== false;
+
+        const newUser: User = {
+            _id: id,
+            id,
+            username: user.username,
+            fullname: user.fullname,
+            role,
+            priceMultiplier,
+            showPrices,
+            password: passwordHash || undefined
+        };
+        return mockDbService.addUser(newUser);
+    }
+
     try {
         let passwordHash = user.password;
         if (passwordHash) {
             passwordHash = await bcrypt.hash(passwordHash, SALTROUNDS);
         }
-        const role = user.role ? user.role.trim().toLowerCase() : 'supplier';
+        const role: Role = (user.role ? user.role.trim().toLowerCase() : 'client') as Role;
         const id = user._id || user.id || crypto.randomBytes(12).toString('hex');
         const priceMultiplier = user.priceMultiplier !== undefined ? user.priceMultiplier : 1.0;
         const showPrices = user.showPrices !== false;
@@ -107,8 +144,12 @@ async function update(user: User): Promise<User> {
     const id = user._id || user.id;
     if (!id) throw new Error('Update requires an _id or id');
 
+    if (dbService.isMockMode()) {
+        return mockDbService.updateUser(user);
+    }
+
     try {
-        const role = user.role ? user.role.trim().toLowerCase() : 'supplier';
+        const role: Role = (user.role ? user.role.trim().toLowerCase() : 'client') as Role;
         const priceMultiplier = user.priceMultiplier !== undefined ? user.priceMultiplier : 1.0;
         const showPrices = user.showPrices !== false;
 
@@ -155,6 +196,13 @@ async function update(user: User): Promise<User> {
 }
 
 async function updateBulkMultiplier(role: string, multiplier: number): Promise<number> {
+    if (dbService.isMockMode()) {
+        const cleanRole = role.trim().toLowerCase();
+        const users = mockDbService.getUsers().filter(u => (u.role || '').toLowerCase() === cleanRole);
+        users.forEach(u => { u.priceMultiplier = multiplier; });
+        return users.length;
+    }
+
     try {
         const cleanRole = role.trim();
         const sql = `
@@ -171,6 +219,11 @@ async function updateBulkMultiplier(role: string, multiplier: number): Promise<n
 }
 
 async function remove(userId: string): Promise<string> {
+    if (dbService.isMockMode()) {
+        mockDbService.removeUser(userId);
+        return userId;
+    }
+
     try {
         const sql = `DELETE FROM public.users WHERE id = $1 RETURNING id;`;
         const result = await dbService.query(sql, [userId]);
