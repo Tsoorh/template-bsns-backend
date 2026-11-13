@@ -1,0 +1,159 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+
+import express, { Request, Response, NextFunction } from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import { loggerService } from "./services/logger.service";
+import { setupAsyncLocalStorage } from "./middlewares/setupAls.middleware";
+import path from 'path';
+import fs from 'fs';
+import { injectProductOpenGraph } from "./services/og-meta.service";
+
+
+const app = express();
+app.set('trust proxy', 1);
+
+// **************config****************
+const isProd = process.env.NODE_ENV === 'production';
+const corsOptions = {
+  origin: isProd 
+          ? [
+              "https://tiranlasry.com", 
+              "https://www.tiranlasry.com",
+              "https://api.tiranlasry.com",
+              "https://tiran-lasry.pages.dev",
+              "https://tiran-lasry-frontend.pages.dev",
+              "http://localhost:5173",
+              "http://127.0.0.1:5173"
+            ]
+          : ["http://localhost:5173", "http://127.0.0.1:5173"],
+  credentials: true,
+};
+
+// CORS must be one of the first middlewares to handle preflight OPTIONS requests
+app.use(cors(corsOptions));
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 500, // Limit each IP to 500 requests per `window` (here, per 15 minutes)
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// middlewares
+app.use(helmet({
+  hsts: { maxAge: 31536000, includeSubDomains: true },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      connectSrc: ["'self'", "https://api.cloudinary.com", "https://res.cloudinary.com"],
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
+      mediaSrc: ["'self'", "https://res.cloudinary.com"],
+      scriptSrc: ["'self'", "https://cdn.jsdelivr.net"],
+    }
+  }
+}));
+app.use(express.static('public'));
+app.use(cookieParser());
+app.use(express.json({ limit: '500kb' }));
+app.use(express.urlencoded({ extended: true, limit: '500kb' }))
+app.set('query parser', 'extended');
+app.use(setupAsyncLocalStorage)
+
+// Apply rate limiting to API routes
+app.use('/api/', limiter);
+
+//api routing
+import { authRoutes } from "./api/auth/auth.route";
+import { productRoutes } from "./api/product/products.route";
+import { productService } from "./api/product/products.service";
+import { userRoutes } from "./api/user/user.route";
+import { siteMediaRoutes } from "./api/site-media/site-media.route";
+import { optionsRoutes } from "./api/options/options.route";
+import { dbService } from "./services/db.service";
+
+app.use('/api/auth',authRoutes)
+app.use('/api/product',productRoutes)
+app.use('/api/user', userRoutes)
+app.use('/api/site-media', siteMediaRoutes)
+app.use('/api/options', optionsRoutes)
+
+// Graceful shutdown
+const shutdown = async (signal: string) => {
+    loggerService.info(`Received ${signal}. Shutting down gracefully...`);
+    await dbService.close();
+    process.exit(0);
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
+
+
+
+// Dynamic Open Graph handler for product link preview
+app.get('/product/:productId', async (req, res) => {
+    const indexPath = path.resolve('public/index.html');
+    if (!fs.existsSync(indexPath)) {
+        return res.status(404).send('Not Found');
+    }
+
+    try {
+        const { productId } = req.params;
+        const product = await productService.getById(productId);
+        if (!product) {
+            return res.sendFile(indexPath);
+        }
+
+        const rawHtml = await fs.promises.readFile(indexPath, 'utf-8');
+        const publicSiteOrigin = (process.env.PUBLIC_SITE_URL || 'https://tiranlasry.com').replace(/\/+$/, '');
+        const pageUrl = `${publicSiteOrigin}${req.originalUrl}`;
+        const enrichedHtml = injectProductOpenGraph(rawHtml, product, pageUrl);
+
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.send(enrichedHtml);
+    } catch (err) {
+        loggerService.error('Error injecting product OG tags:', err);
+        return res.sendFile(indexPath);
+    }
+});
+
+// * For SPA (Single Page Application) - catch all routes and send to the index.html
+// Ensure we don't hijack API requests that should have been 404s
+app.get(/^(?!\/api).*/, (req, res) => {
+    res.sendFile(path.resolve('public/index.html'))
+})
+
+// Custom 404 for API
+app.use('/api', (req, res) => {
+    loggerService.warn(`404 - API Route not found: ${req.method} ${req.originalUrl}`);
+    res.status(404).send({ error: 'API route not found' });
+});
+
+// Global Error Handler
+app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
+    void _next;
+    loggerService.error('Unhandled Error:', err);
+    res.status(500).send('Internal Server Error');
+});
+
+const port = process.env.PORT || 3000;
+const server = app.listen(port, () => loggerService.info(`Server ready at port ${port}`));
+
+server.on('error', (err: NodeJS.ErrnoException) => {
+    if (err.code === 'EADDRINUSE') {
+        loggerService.error(`Port ${port} is already in use by another process (EADDRINUSE). Please terminate that process or set PORT in .env.`);
+    } else {
+        loggerService.error('Server error:', err);
+    }
+    process.exit(1);
+});
+
+
+// for package.json -> script:  // "start": "set PORT=3030 & nodemon --ignore \"./data\" server.js"
