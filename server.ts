@@ -19,19 +19,20 @@ app.set('trust proxy', 1);
 
 // **************config****************
 const isProd = process.env.NODE_ENV === 'production';
+const envOrigins = (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map(o => o.trim())
+    .filter(Boolean);
+
+const defaultOrigins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000"
+];
+
 const corsOptions = {
-  origin: isProd 
-          ? [
-              "https://tiranlasry.com", 
-              "https://www.tiranlasry.com",
-              "https://api.tiranlasry.com",
-              "https://tiran-lasry.pages.dev",
-              "https://tiran-lasry-frontend.pages.dev",
-              "http://localhost:5173",
-              "http://127.0.0.1:5173"
-            ]
-          : ["http://localhost:5173", "http://127.0.0.1:5173"],
-  credentials: true,
+    origin: envOrigins.length > 0 ? [...defaultOrigins, ...envOrigins] : (isProd ? true : defaultOrigins),
+    credentials: true,
 };
 
 // CORS must be one of the first middlewares to handle preflight OPTIONS requests
@@ -52,19 +53,20 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      connectSrc: ["'self'", "https://api.cloudinary.com", "https://res.cloudinary.com"],
-      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
-      mediaSrc: ["'self'", "https://res.cloudinary.com"],
+      connectSrc: ["'self'", "https://*.r2.cloudflarestorage.com", "https://*.r2.dev", "https://api.cloudinary.com", "https://res.cloudinary.com"],
+      imgSrc: ["'self'", "data:", "https:", "http:"],
+      mediaSrc: ["'self'", "https:", "http:"],
       scriptSrc: ["'self'", "https://cdn.jsdelivr.net"],
     }
   }
 }));
 app.use(express.static('public'));
+app.use('/uploads', express.static(path.resolve('public/uploads')));
 app.use(cookieParser());
-app.use(express.json({ limit: '500kb' }));
-app.use(express.urlencoded({ extended: true, limit: '500kb' }))
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 app.set('query parser', 'extended');
-app.use(setupAsyncLocalStorage)
+app.use(setupAsyncLocalStorage);
 
 // Apply rate limiting to API routes
 app.use('/api/', limiter);
@@ -75,14 +77,16 @@ import { productRoutes } from "./api/product/products.route";
 import { productService } from "./api/product/products.service";
 import { userRoutes } from "./api/user/user.route";
 import { siteMediaRoutes } from "./api/site-media/site-media.route";
-import { optionsRoutes } from "./api/options/options.route";
+import { settingsRoutes } from "./api/settings/settings.route";
+import { uploadRoutes } from "./api/upload/upload.route";
 import { dbService } from "./services/db.service";
 
-app.use('/api/auth',authRoutes)
-app.use('/api/product',productRoutes)
-app.use('/api/user', userRoutes)
-app.use('/api/site-media', siteMediaRoutes)
-app.use('/api/options', optionsRoutes)
+app.use('/api/auth', authRoutes);
+app.use('/api/product', productRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/site-media', siteMediaRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Graceful shutdown
 const shutdown = async (signal: string) => {
@@ -112,7 +116,7 @@ app.get('/product/:productId', async (req, res) => {
         }
 
         const rawHtml = await fs.promises.readFile(indexPath, 'utf-8');
-        const publicSiteOrigin = (process.env.PUBLIC_SITE_URL || 'https://tiranlasry.com').replace(/\/+$/, '');
+        const publicSiteOrigin = (process.env.PUBLIC_SITE_URL || 'http://localhost:5173').replace(/\/+$/, '');
         const pageUrl = `${publicSiteOrigin}${req.originalUrl}`;
         const enrichedHtml = injectProductOpenGraph(rawHtml, product, pageUrl);
 

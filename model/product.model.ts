@@ -1,34 +1,15 @@
-export type FilterBy = {
-    txt?: string
-    price?: number
-    category?: string
-    isActive?: boolean
-    isNew?: boolean
-}
-
-type hebrewEnglishObj = {
+export type hebrewEnglishObj = {
     he: string
     en: string
 }
 
 export type ProductPrice = {
-    wood: hebrewEnglishObj
     amount: number
+    variant?: hebrewEnglishObj
+    wood?: hebrewEnglishObj // Backwards-compatible alias for finish/material variant
     size?: string
     sku?: string
 }
-
-export type Product = {
-    _id?: string
-    id?: string
-    name: hebrewEnglishObj
-    description: hebrewEnglishObj
-    price?: ProductPrice[]
-    isActive?: boolean
-    isNew?: boolean
-}
-
-export type ProductParams = { productId: string }
 
 export type ProductSize = {
     height?: number
@@ -39,18 +20,40 @@ export type ProductSize = {
     upTo?: number
 }
 
-type SocketType = {
-    screwType: string
-    lightType: string
+export type Product = {
+    _id?: string
+    id?: string
+    name: hebrewEnglishObj
+    description: hebrewEnglishObj
+    price?: ProductPrice[]
+    isActive?: boolean
+    isNew?: boolean
+    isFeatured?: boolean
 }
 
 export type FullProduct = Product & {
     category: hebrewEnglishObj[]
     imgsUrl: string[]
-    diameter?: number
     size: ProductSize[]
-    socketType: SocketType
-    material: hebrewEnglishObj[]
-    woodType: hebrewEnglishObj[]
-    isActive?: boolean
+    // Dynamic attributes dictionary replaces hardcoded woodType & socketType
+    attributes?: Record<string, string | string[] | hebrewEnglishObj>
+    // Backwards-compatibility aliases for legacy fields
+    material?: hebrewEnglishObj[]
+    woodType?: hebrewEnglishObj[]
+    socketType?: { screwType?: string; lightType?: string }
+    diameter?: number
+    createdAt?: string
+    updatedAt?: string
 }
+
+export type FilterBy = {
+    txt?: string
+    price?: number
+    category?: string
+    isActive?: boolean
+    isNew?: boolean
+    isFeatured?: boolean
+    attributes?: Record<string, string | string[]>
+}
+
+export type ProductParams = { productId: string }

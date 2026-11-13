@@ -107,8 +107,9 @@ async function generatePDF(products: FullProduct[], title: string): Promise<Buff
                             }
                         }
 
-                        const displayName = priceEntry.wood.en
-                            ? `${product.name.en} - ${priceEntry.wood.en}`
+                        const variantLabel = priceEntry.variant?.en || priceEntry.wood?.en || '';
+                        const displayName = variantLabel
+                            ? `${product.name.en} - ${variantLabel}`
                             : product.name.en;
 
                         doc.font('Heebo-Bold').fontSize(12).text(displayName, 160, startY, { width: 350 });
@@ -165,8 +166,9 @@ async function generateExcel(products: FullProduct[], title: string): Promise<Bu
             : [{ wood: { he: '', en: '' }, amount: 0 }];
 
         for (const priceEntry of prices) {
-            const displayName = priceEntry.wood.en
-                ? `${product.name.en} - ${priceEntry.wood.en}`
+            const variantLabel = priceEntry.variant?.en || priceEntry.wood?.en || '';
+            const displayName = variantLabel
+                ? `${product.name.en} - ${variantLabel}`
                 : product.name.en;
 
             const row = sheet.addRow([

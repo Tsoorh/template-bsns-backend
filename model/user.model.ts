@@ -1,4 +1,4 @@
-export type Role = 'admin' | 'supplier' | 'architect'
+export type Role = 'admin' | 'client' | 'trade' | 'supplier' | 'architect'
 
 export type Miniuser = {
     _id?: string

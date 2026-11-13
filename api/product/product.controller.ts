@@ -2,15 +2,9 @@ import type { Request, Response } from "express";
 import { loggerService } from "../../services/logger.service";
 import { productService } from "./products.service";
 import { FullProduct, ProductParams, FilterBy } from "../../model/product.model";
-import { cloudinaryService } from "../../services/cloudinary.service";
-import { getCloudinaryPublicId } from "../../services/cloudinary-url.util";
 import { ProductSaveSchema } from "./product.schema";
 import { exportService } from "../../services/export.service";
-import { asyncLocalStorage } from "../../services/als.service";
-import { Miniuser } from "../../model/user.model";
-
-
-
+import { bulkImportService } from "../../services/bulk-import.service";
 
 export async function getProducts(req: Request, res: Response) {
     const { txt, price, category, isNew } = req.query
@@ -52,37 +46,11 @@ export async function saveProduct(req: Request, res: Response): Promise<void> {
     const product = req.body.product as FullProduct
     try {
         let savedProduct: FullProduct
-        let imagesToDelete: string[] = []
-
-        if (product._id) {
-            // Optimized Diffing: Fetch only imgsUrl field using projection
-            const existingProduct = await productService.getById(product._id.toString()) as Partial<FullProduct> | null
-            if (existingProduct) {
-                const oldImages = existingProduct.imgsUrl || []
-                const newImages = product.imgsUrl || []
-                imagesToDelete = oldImages.filter((img: string) => !newImages.includes(img))
-            }
+        if (product._id || product.id) {
             savedProduct = await productService.update(product) as FullProduct
         } else {
             savedProduct = await productService.add(product) as FullProduct
         }
-
-        // Managed Parallelism for Cloudinary deletions
-        if (imagesToDelete.length > 0) {
-            const deletionTasks = imagesToDelete.map(imgId => {
-                const publicId = getCloudinaryPublicId(imgId)
-                return cloudinaryService.removeImage(publicId)
-            })
-            
-            Promise.allSettled(deletionTasks).then(results => {
-                results.forEach((result, idx) => {
-                    if (result.status === 'rejected') {
-                        loggerService.error(`Failed to delete image ${imagesToDelete[idx]} from Cloudinary`, result.reason)
-                    }
-                })
-            })
-        }
-
         res.send(savedProduct)
     } catch (err) {
         loggerService.error(err)
@@ -90,73 +58,76 @@ export async function saveProduct(req: Request, res: Response): Promise<void> {
     }
 }
 
-export async function removeProduct(req: Request<ProductParams>, res: Response) {
+export async function removeProduct(req: Request<ProductParams>, res: Response): Promise<void> {
     const { productId } = req.params
     try {
-        // Fetch only imgsUrl for deletion before removing from DB
-        const existingProduct = await productService.getById(productId) as Partial<FullProduct> | null
-        const deletedId = await productService.remove(productId)
-
-        if (existingProduct && existingProduct.imgsUrl && existingProduct.imgsUrl.length > 0) {
-            const deletionTasks = existingProduct.imgsUrl.map(imgId => {
-                const publicId = getCloudinaryPublicId(imgId)
-                return cloudinaryService.removeImage(publicId)
-            })
-
-            Promise.allSettled(deletionTasks).then(results => {
-                results.forEach((result) => {
-                    if (result.status === 'rejected') {
-                        loggerService.error(`Failed to delete image from Cloudinary on product removal`, result.reason)
-                    }
-                })
-            })
-        }
-
-        res.send(deletedId);
+        const removedId = await productService.remove(productId)
+        res.send(removedId)
     } catch (err) {
         loggerService.error(err)
         res.status(400).send("Couldn't remove product")
     }
 }
 
-export async function exportPdf(req: Request, res: Response) {
-    const { loggedinUser } = asyncLocalStorage.getStore() as { loggedinUser?: Miniuser } || {}
-    const role = loggedinUser?.role?.toLowerCase()
-    if (role !== 'admin' && role !== 'supplier' && role !== 'architect') {
-        return res.status(403).send('Not Authorized')
-    }
-
+export async function exportPdf(req: Request, res: Response): Promise<void> {
     try {
-        const products = await productService.query({ isActive: true }) as FullProduct[]
-        const title = `מחירון - ${loggedinUser?.fullname || ''}`
-        const buffer = await exportService.generatePDF(products, title)
-
-        res.setHeader('Content-Type', 'application/octet-stream')
+        const products = await productService.query({})
+        const pdfBuffer = await exportService.generatePDF(products, "Product Catalog & Price List")
+        res.setHeader('Content-Type', 'application/pdf')
         res.setHeader('Content-Disposition', 'attachment; filename="price-list.pdf"')
-        res.send(buffer)
+        res.send(pdfBuffer)
     } catch (err) {
-        loggerService.error('Failed to export PDF', err instanceof Error ? { message: err.message, stack: err.stack } : err)
-        res.status(500).send('Internal Server Error')
+        loggerService.error(err)
+        res.status(500).send("Couldn't generate PDF price list")
     }
 }
 
-export async function exportExcel(req: Request, res: Response) {
-    const { loggedinUser } = asyncLocalStorage.getStore() as { loggedinUser?: Miniuser } || {}
-    const role = loggedinUser?.role?.toLowerCase()
-    if (role !== 'admin' && role !== 'supplier' && role !== 'architect') {
-        return res.status(403).send('Not Authorized')
-    }
-
+export async function exportExcel(req: Request, res: Response): Promise<void> {
     try {
-        const products = await productService.query({ isActive: true }) as FullProduct[]
-        const title = `מחירון - ${loggedinUser?.fullname || ''}`
-        const buffer = await exportService.generateExcel(products, title)
-
+        const products = await productService.query({})
+        const excelBuffer = await exportService.generateExcel(products, "Product Catalog & Price List")
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         res.setHeader('Content-Disposition', 'attachment; filename="price-list.xlsx"')
+        res.send(excelBuffer)
+    } catch (err) {
+        loggerService.error(err)
+        res.status(500).send("Couldn't generate Excel price list")
+    }
+}
+
+export async function downloadBulkTemplate(_req: Request, res: Response): Promise<void> {
+    try {
+        const buffer = await bulkImportService.generateTemplateBuffer()
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        res.setHeader('Content-Disposition', 'attachment; filename="Product_Template.xlsx"')
         res.send(buffer)
     } catch (err) {
-        loggerService.error('Failed to export Excel', err)
-        res.status(500).send('Internal Server Error')
+        loggerService.error("Failed to generate product import template:", err)
+        res.status(500).send("Failed to generate template")
+    }
+}
+
+export async function bulkImportProducts(req: Request, res: Response): Promise<void> {
+    try {
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined
+        const spreadsheetFile = files?.['spreadsheet']?.[0]
+        const imageFiles = files?.['images'] || []
+        const siteId = (req.body.siteId as string) || 'template-store'
+
+        if (!spreadsheetFile) {
+            res.status(400).send({ error: 'Missing spreadsheet file (.xlsx)' })
+            return
+        }
+
+        const result = await bulkImportService.importFromSpreadsheetAndFiles(
+            spreadsheetFile.buffer,
+            imageFiles,
+            siteId
+        )
+
+        res.send(result)
+    } catch (err) {
+        loggerService.error("Bulk import failed:", err)
+        res.status(500).send({ error: "Bulk import failed", message: err instanceof Error ? err.message : String(err) })
     }
 }

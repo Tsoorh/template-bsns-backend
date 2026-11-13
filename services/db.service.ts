@@ -3,15 +3,19 @@ import { config } from '../config/index';
 import { loggerService } from './logger.service';
 
 let pool: Pool | null = null;
+const isMockMode = !config.postgresURL || config.postgresURL.trim() === '';
+
+if (isMockMode) {
+    loggerService.warn('⚡ POSTGRES_URL is not set. Operating in Zero-Config Mock DB mode for local testing.');
+}
 
 function getPool(): Pool {
+    if (isMockMode) {
+        throw new Error('Database is in Mock DB mode. Direct PostgreSQL pool query is not available.');
+    }
+
     if (!pool) {
         const url = config.postgresURL;
-        if (!url) {
-            loggerService.error('FATAL: POSTGRES_URL is missing in environment/config.');
-            throw new Error('Database connection URL is not configured.');
-        }
-
         const isLocal = url.includes('localhost') || url.includes('127.0.0.1') || url.includes('sslmode=disable');
 
         let ssl: false | { rejectUnauthorized: boolean; ca?: string } = false;
@@ -66,5 +70,6 @@ async function close(): Promise<void> {
 export const dbService = {
     query,
     getClient,
-    close
+    close,
+    isMockMode: () => isMockMode
 };

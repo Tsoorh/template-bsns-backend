@@ -1,5 +1,6 @@
 import crypto from "crypto"
 import { dbService } from "../../services/db.service"
+import { mockDbService } from "../../services/mock-db.service"
 import { loggerService } from "../../services/logger.service"
 import { FilterBy, FullProduct } from "../../model/product.model"
 import { asyncLocalStorage } from "../../services/als.service"
@@ -23,16 +24,36 @@ function _mapRowToProduct(row: Record<string, any>): FullProduct {
         price: row.price || [],
         imgsUrl: row.imgs_url || [],
         size: row.size || [],
-        woodType: row.wood_type || [],
-        material: row.material || [],
-        socketType: row.socket_type || { screwType: '', lightType: '' },
+        attributes: row.attributes || {},
         category: row.category || [],
         isActive: row.is_active,
-        isNew: row.is_new
+        isNew: row.is_new,
+        isFeatured: row.is_featured,
+        woodType: row.wood_type || [],
+        material: row.material || [],
+        socketType: row.socket_type || { screwType: '', lightType: '' }
     }
 }
 
 async function query(filterBy: FilterBy = {}): Promise<FullProduct[]> {
+    if (dbService.isMockMode()) {
+        let items = mockDbService.getProducts()
+        if (filterBy.category && filterBy.category.toLowerCase() !== 'all') {
+            const cat = filterBy.category.toLowerCase().trim()
+            items = items.filter(p => p.category.some(c => c.en.toLowerCase().includes(cat) || c.he.includes(cat)))
+        }
+        if (filterBy.txt && filterBy.txt.trim()) {
+            const txt = filterBy.txt.toLowerCase().trim()
+            items = items.filter(p => 
+                p.name.en.toLowerCase().includes(txt) || 
+                p.name.he.includes(txt) || 
+                p.description.en.toLowerCase().includes(txt) || 
+                p.description.he.includes(txt)
+            )
+        }
+        return items.map(p => _applyPricingLogic(p))
+    }
+
     const store = asyncLocalStorage.getStore() as { loggedinUser?: Miniuser } | undefined
     const user = store?.loggedinUser
     const isAdmin = user?.role && user.role.trim().toLowerCase() === 'admin'
@@ -49,13 +70,13 @@ async function query(filterBy: FilterBy = {}): Promise<FullProduct[]> {
         conditions.push('is_active IS NOT FALSE')
     }
 
-    // 2. New collection status
+    // 2. New status
     if (filterBy.isNew !== undefined) {
         values.push(filterBy.isNew)
         conditions.push(`is_new = $${values.length}`)
     }
 
-    // 3. Search text (multilingual in name & description)
+    // 3. Search text
     if (filterBy.txt && filterBy.txt.trim()) {
         values.push(`%${filterBy.txt.trim()}%`)
         const idx = values.length
@@ -99,7 +120,7 @@ async function query(filterBy: FilterBy = {}): Promise<FullProduct[]> {
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
     const sql = `
-        SELECT id, name, description, price, imgs_url, size, wood_type, material, socket_type, category, is_active, is_new
+        SELECT id, name, description, price, imgs_url, size, attributes, category, is_active, is_new, is_featured
         FROM public.products
         ${whereClause}
         ORDER BY id ASC;
@@ -116,9 +137,14 @@ async function query(filterBy: FilterBy = {}): Promise<FullProduct[]> {
 }
 
 async function getById(productId: string): Promise<FullProduct | null> {
+    if (dbService.isMockMode()) {
+        const product = mockDbService.getProductById(productId)
+        return product ? _applyPricingLogic(product) : null
+    }
+
     try {
         const sql = `
-            SELECT id, name, description, price, imgs_url, size, wood_type, material, socket_type, category, is_active, is_new
+            SELECT id, name, description, price, imgs_url, size, attributes, category, is_active, is_new, is_featured
             FROM public.products
             WHERE id = $1;
         `
@@ -141,27 +167,32 @@ async function getById(productId: string): Promise<FullProduct | null> {
 }
 
 async function add(product: FullProduct): Promise<FullProduct> {
+    const id = product._id || product.id || `prod_${crypto.randomBytes(8).toString('hex')}`
+    const fullProd: FullProduct = { ...product, id, _id: id }
+
+    if (dbService.isMockMode()) {
+        return mockDbService.addProduct(fullProd)
+    }
+
     try {
-        const id = product._id || product.id || crypto.randomBytes(12).toString('hex')
         const sql = `
             INSERT INTO public.products (
-                id, name, description, price, imgs_url, size, wood_type, material, socket_type, category, is_active, is_new
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                id, name, description, price, imgs_url, size, attributes, category, is_active, is_new, is_featured
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             RETURNING *;
         `
         const values = [
             id,
-            JSON.stringify(product.name || { he: '', en: '' }),
-            JSON.stringify(product.description || { he: '', en: '' }),
-            JSON.stringify(product.price || []),
-            JSON.stringify(product.imgsUrl || []),
-            JSON.stringify(product.size || []),
-            JSON.stringify(product.woodType || []),
-            JSON.stringify(product.material || []),
-            JSON.stringify(product.socketType || { screwType: '', lightType: '' }),
-            JSON.stringify(product.category || []),
-            product.isActive !== false,
-            !!product.isNew
+            JSON.stringify(fullProd.name || { he: '', en: '' }),
+            JSON.stringify(fullProd.description || { he: '', en: '' }),
+            JSON.stringify(fullProd.price || []),
+            JSON.stringify(fullProd.imgsUrl || []),
+            JSON.stringify(fullProd.size || []),
+            JSON.stringify(fullProd.attributes || {}),
+            JSON.stringify(fullProd.category || []),
+            fullProd.isActive !== false,
+            !!fullProd.isNew,
+            !!fullProd.isFeatured
         ]
 
         const result = await dbService.query(sql, values)
@@ -176,6 +207,10 @@ async function update(product: FullProduct): Promise<FullProduct> {
     const id = product._id || product.id
     if (!id) throw new Error('Update requires an _id or id')
 
+    if (dbService.isMockMode()) {
+        return mockDbService.updateProduct(product)
+    }
+
     try {
         const sql = `
             UPDATE public.products SET
@@ -184,12 +219,12 @@ async function update(product: FullProduct): Promise<FullProduct> {
                 price = $4,
                 imgs_url = $5,
                 size = $6,
-                wood_type = $7,
-                material = $8,
-                socket_type = $9,
-                category = $10,
-                is_active = $11,
-                is_new = $12
+                attributes = $7,
+                category = $8,
+                is_active = $9,
+                is_new = $10,
+                is_featured = $11,
+                updated_at = NOW()
             WHERE id = $1
             RETURNING *;
         `
@@ -200,12 +235,11 @@ async function update(product: FullProduct): Promise<FullProduct> {
             JSON.stringify(product.price || []),
             JSON.stringify(product.imgsUrl || []),
             JSON.stringify(product.size || []),
-            JSON.stringify(product.woodType || []),
-            JSON.stringify(product.material || []),
-            JSON.stringify(product.socketType || { screwType: '', lightType: '' }),
+            JSON.stringify(product.attributes || {}),
             JSON.stringify(product.category || []),
             product.isActive !== false,
-            !!product.isNew
+            !!product.isNew,
+            !!product.isFeatured
         ]
 
         const result = await dbService.query(sql, values)
@@ -221,6 +255,10 @@ async function update(product: FullProduct): Promise<FullProduct> {
 }
 
 async function remove(productId: string): Promise<string> {
+    if (dbService.isMockMode()) {
+        return mockDbService.deleteProduct(productId)
+    }
+
     try {
         const sql = `DELETE FROM public.products WHERE id = $1 RETURNING id;`
         const result = await dbService.query(sql, [productId])
@@ -240,7 +278,7 @@ function _applyPricingLogic<T extends FullProduct>(product: T): T {
 
     const p = { ...product }
 
-    // If no user or guest, don't show prices
+    // If no user or guest, don't show prices if restricted
     if (!user || user.showPrices === false) {
         if (p.price && Array.isArray(p.price)) {
             p.price = p.price.map(priceEntry => {
@@ -250,14 +288,9 @@ function _applyPricingLogic<T extends FullProduct>(product: T): T {
             })
         }
     } else if (p.price && Array.isArray(p.price)) {
-        if (user?.priceMultiplier !== undefined) {
-            // Apply specific multiplier from user DB object to each price entry
-            const isSupplierOrArchitect = user?.role === 'supplier' || user?.role === 'architect'
+        if (user?.priceMultiplier !== undefined && user.priceMultiplier !== 1.0) {
             p.price = p.price.map(priceEntry => {
-                let newAmount = priceEntry.amount * (user.priceMultiplier as number)
-                if (isSupplierOrArchitect) {
-                    newAmount = Math.round(newAmount)
-                }
+                const newAmount = Math.round(priceEntry.amount * (user.priceMultiplier as number))
                 return {
                     ...priceEntry,
                     amount: newAmount

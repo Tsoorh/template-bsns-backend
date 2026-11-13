@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import { cloudinary } from '../../services/cloudinary.service'
 import { dbService } from '../../services/db.service'
+import { mockDbService } from '../../services/mock-db.service'
 import { loggerService } from '../../services/logger.service'
 import { 
     CANONICAL_SLOT_IDS, 
@@ -68,6 +69,9 @@ function _mapRowToLog(row: Record<string, unknown>): SiteMediaLogEntry {
 }
 
 async function getSiteMedia(): Promise<SiteMediaConfig> {
+    if (dbService.isMockMode()) {
+        return mockDbService.getMedia()
+    }
     try {
         const sql = `
             SELECT id, version, hero_video, gallery, full_width_banner, publication_id, updated_at 
@@ -156,6 +160,18 @@ async function publishMedia(
     draftConfig: PublishMediaInput['draftConfig'], 
     user: Miniuser
 ) {
+    if (dbService.isMockMode()) {
+        const current = mockDbService.getMedia()
+        const updated = {
+            ...current,
+            heroVideo: draftConfig.heroVideo ? { ...current.heroVideo, ...draftConfig.heroVideo } : current.heroVideo,
+            gallery: draftConfig.gallery ? { ...current.gallery, ...draftConfig.gallery } : current.gallery,
+            fullWidthBanner: draftConfig.fullWidthBanner ? { ...current.fullWidthBanner, ...draftConfig.fullWidthBanner } : current.fullWidthBanner,
+            version: (current.version || 1) + 1,
+            updatedAt: new Date().toISOString()
+        } as SiteMediaConfig
+        return mockDbService.updateMedia(updated)
+    }
     const checkSql = `
         SELECT id, version, hero_video, gallery, full_width_banner, publication_id, updated_at 
         FROM public.site_media 
