@@ -55,8 +55,12 @@ CREATE TABLE IF NOT EXISTS public.site_media (
     gallery JSONB NOT NULL,
     full_width_banner JSONB,
     version INT DEFAULT 1,
+    publication_id VARCHAR(64),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Ensure publication_id column exists if table was previously created
+ALTER TABLE public.site_media ADD COLUMN IF NOT EXISTS publication_id VARCHAR(64);
 
 -- Site Media Audit Log Table
 CREATE TABLE IF NOT EXISTS public.site_media_logs (

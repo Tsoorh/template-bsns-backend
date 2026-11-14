@@ -169,6 +169,9 @@ async function seed() {
         console.log('✅ Seeded default site settings, brand theme, and story.');
 
         // 4. Seed Site Media
+        await dbService.query(`
+            ALTER TABLE public.site_media ADD COLUMN IF NOT EXISTS publication_id VARCHAR(64);
+        `);
         const mediaSql = `
             INSERT INTO public.site_media (
                 id, version, publication_id, hero_video, full_width_banner, gallery, updated_at
