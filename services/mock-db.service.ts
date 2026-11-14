@@ -15,19 +15,19 @@ const INITIAL_MOCK_PRODUCTS: FullProduct[] = [
     {
         _id: 'prod_1',
         id: 'prod_1',
-        name: { en: 'Nordic Oak Dining Table', he: 'שולחן אוכל מעץ אלון' },
+        name: { en: 'Product 1', he: 'מוצר 1' },
         description: {
-            en: 'Handcrafted solid oak dining table featuring subtle bevelled edges and organic oiled finish.',
-            he: 'שולחן אוכל מעץ אלון מלא בעבודת יד עם קצוות משופעים בגימור שמן טבעי יוקרתי.'
+            en: 'Sample description for Product 1. This is placeholder text for the template boilerplate.',
+            he: 'תיאור לדוגמה עבור מוצר 1. זהו מלל ממלא מקום עבור תבנית האתר.'
         },
-        category: [{ en: 'Dining Tables', he: 'שולחנות אוכל' }],
+        category: [{ en: 'Category 1', he: 'קטגוריה 1' }],
         price: [
-            { amount: 4800, variant: { en: 'Natural Oak', he: 'אלון טבעי' }, sku: 'TBL-OAK-01', size: '200x100 cm' },
-            { amount: 5600, variant: { en: 'Smoked Oak', he: 'אלון מעושן' }, sku: 'TBL-SMK-02', size: '240x100 cm' }
+            { amount: 150, variant: { en: 'Variant A', he: 'גרסה א׳' }, wood: { en: 'Variant A', he: 'גרסה א׳' }, sku: 'SKU-001-A' },
+            { amount: 180, variant: { en: 'Variant B', he: 'גרסה ב׳' }, wood: { en: 'Variant B', he: 'גרסה ב׳' }, sku: 'SKU-001-B' }
         ],
-        imgsUrl: ['/images/placeholders/table-1.webp'],
-        size: [{ length: 200, width: 100, height: 75 }],
-        attributes: { material: 'Solid Oak', finish: 'Organic Oil', productionTime: '21 business days' },
+        imgsUrl: ['/images/placeholders/product-placeholder.svg'],
+        size: [{ length: 100, width: 50, height: 75 }],
+        attributes: { material: 'Material 1', color: 'Option A' },
         isActive: true,
         isNew: true,
         isFeatured: true
@@ -35,38 +35,97 @@ const INITIAL_MOCK_PRODUCTS: FullProduct[] = [
     {
         _id: 'prod_2',
         id: 'prod_2',
-        name: { en: 'Sculptural Ceramic Pendant Light', he: 'גוף תאורה קרמי תלוי' },
+        name: { en: 'Product 2', he: 'מוצר 2' },
         description: {
-            en: 'Wheel-thrown stoneware lamp with brushed brass hardware, casting a warm focused glow.',
-            he: 'גוף תאורה בחימר סטודיו בעבודת אבניים בשילוב פליז מוברש המעניק תאורה נעימה וחמה.'
+            en: 'Sample description for Product 2. This is placeholder text for the template boilerplate.',
+            he: 'תיאור לדוגמה עבור מוצר 2. זהו מלל ממלא מקום עבור תבנית האתר.'
         },
-        category: [{ en: 'Pendant Lights', he: 'גופי תאורה תלויים' }],
+        category: [{ en: 'Category 1', he: 'קטגוריה 1' }],
         price: [
-            { amount: 1450, variant: { en: 'Terracotta Matte', he: 'טרקוטה מט' }, sku: 'LGT-CRM-01' },
-            { amount: 1550, variant: { en: 'Chalk White', he: 'לבן גיר' }, sku: 'LGT-CRM-02' }
+            { amount: 250, variant: { en: 'Variant A', he: 'גרסה א׳' }, wood: { en: 'Variant A', he: 'גרסה א׳' }, sku: 'SKU-002-A' },
+            { amount: 300, variant: { en: 'Variant B', he: 'גרסה ב׳' }, wood: { en: 'Variant B', he: 'גרסה ב׳' }, sku: 'SKU-002-B' }
         ],
-        imgsUrl: ['/images/placeholders/light-1.webp'],
-        size: [{ diameter: 32, height: 28 }],
-        attributes: { material: 'Stoneware & Brass', socket: 'E27', maxWattage: '15W LED' },
+        imgsUrl: ['/images/placeholders/product-placeholder.svg'],
+        size: [{ length: 120, width: 60, height: 80 }],
+        attributes: { material: 'Material 1', color: 'Option B' },
         isActive: true,
-        isNew: true,
+        isNew: false,
         isFeatured: true
     },
     {
         _id: 'prod_3',
         id: 'prod_3',
-        name: { en: 'Minimalist Lounge Armchair', he: 'כורסת לאונג מינימליסטית' },
+        name: { en: 'Product 3', he: 'מוצר 3' },
         description: {
-            en: 'Deep lounge armchair upholstered in tactile bouclé with a curved solid walnut frame.',
-            he: 'כורסת מנוחה עמוקה בריפוד בוקלה נעים למגע עם שלדת עץ אגוז אמריקאי מכופף.'
+            en: 'Sample description for Product 3. This is placeholder text for the template boilerplate.',
+            he: 'תיאור לדוגמה עבור מוצר 3. זהו מלל ממלא מקום עבור תבנית האתר.'
         },
-        category: [{ en: 'Lounge Chairs', he: 'כורסאות' }],
+        category: [{ en: 'Category 2', he: 'קטגוריה 2' }],
         price: [
-            { amount: 3200, variant: { en: 'Cream Bouclé', he: 'בוקלה שמנת' }, sku: 'CHR-BOU-01' }
+            { amount: 350, variant: { en: 'Variant A', he: 'גרסה א׳' }, wood: { en: 'Variant A', he: 'גרסה א׳' }, sku: 'SKU-003-A' },
+            { amount: 400, variant: { en: 'Variant B', he: 'גרסה ב׳' }, wood: { en: 'Variant B', he: 'גרסה ב׳' }, sku: 'SKU-003-B' }
         ],
-        imgsUrl: ['/images/placeholders/chair-1.webp'],
-        size: [{ width: 85, depth: 80, height: 74 }],
-        attributes: { material: 'American Walnut & Bouclé', warranty: '5 years' },
+        imgsUrl: ['/images/placeholders/product-placeholder.svg'],
+        size: [{ diameter: 45, height: 35 }],
+        attributes: { material: 'Material 2', finish: 'Finish A' },
+        isActive: true,
+        isNew: true,
+        isFeatured: false
+    },
+    {
+        _id: 'prod_4',
+        id: 'prod_4',
+        name: { en: 'Product 4', he: 'מוצר 4' },
+        description: {
+            en: 'Sample description for Product 4. This is placeholder text for the template boilerplate.',
+            he: 'תיאור לדוגמה עבור מוצר 4. זהו מלל ממלא מקום עבור תבנית האתר.'
+        },
+        category: [{ en: 'Category 2', he: 'קטגוריה 2' }],
+        price: [
+            { amount: 450, variant: { en: 'Standard', he: 'סטנדרטי' }, wood: { en: 'Standard', he: 'סטנדרטי' }, sku: 'SKU-004' }
+        ],
+        imgsUrl: ['/images/placeholders/product-placeholder.svg'],
+        size: [{ width: 80, depth: 80, height: 75 }],
+        attributes: { material: 'Material 2', finish: 'Finish B' },
+        isActive: true,
+        isNew: false,
+        isFeatured: true
+    },
+    {
+        _id: 'prod_5',
+        id: 'prod_5',
+        name: { en: 'Product 5', he: 'מוצר 5' },
+        description: {
+            en: 'Sample description for Product 5. This is placeholder text for the template boilerplate.',
+            he: 'תיאור לדוגמה עבור מוצר 5. זהו מלל ממלא מקום עבור תבנית האתר.'
+        },
+        category: [{ en: 'Category 3', he: 'קטגוריה 3' }],
+        price: [
+            { amount: 550, variant: { en: 'Standard', he: 'סטנדרטי' }, wood: { en: 'Standard', he: 'סטנדרטי' }, sku: 'SKU-005' }
+        ],
+        imgsUrl: ['/images/placeholders/product-placeholder.svg'],
+        size: [{ diameter: 30, height: 60 }],
+        attributes: { material: 'Material 3', style: 'Modern' },
+        isActive: true,
+        isNew: true,
+        isFeatured: false
+    },
+    {
+        _id: 'prod_6',
+        id: 'prod_6',
+        name: { en: 'Product 6', he: 'מוצר 6' },
+        description: {
+            en: 'Sample description for Product 6. This is placeholder text for the template boilerplate.',
+            he: 'תיאור לדוגמה עבור מוצר 6. זהו מלל ממלא מקום עבור תבנית האתר.'
+        },
+        category: [{ en: 'Category 3', he: 'קטגוריה 3' }],
+        price: [
+            { amount: 650, variant: { en: 'Variant A', he: 'גרסה א׳' }, wood: { en: 'Variant A', he: 'גרסה א׳' }, sku: 'SKU-006-A' },
+            { amount: 750, variant: { en: 'Variant B', he: 'גרסה ב׳' }, wood: { en: 'Variant B', he: 'גרסה ב׳' }, sku: 'SKU-006-B' }
+        ],
+        imgsUrl: ['/images/placeholders/product-placeholder.svg'],
+        size: [{ length: 150, width: 80, height: 75 }],
+        attributes: { material: 'Material 3', style: 'Classic' },
         isActive: true,
         isNew: false,
         isFeatured: true

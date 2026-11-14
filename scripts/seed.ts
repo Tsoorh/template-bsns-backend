@@ -5,88 +5,137 @@ import { DEFAULT_SITE_MEDIA } from '../model/site-media.model';
 
 const DEMO_PRODUCTS = [
     {
-        id: 'prod_dining_table_oak',
-        name: { en: 'Nordic Solid Oak Dining Table', he: 'שולחן אוכל נורדי מעץ אלון' },
+        id: 'prod_1',
+        name: { en: 'Product 1', he: 'מוצר 1' },
         description: {
-            en: 'Handcrafted solid oak dining table featuring subtle bevelled edges and organic oiled finish.',
-            he: 'שולחן אוכל מעץ אלון מלא בעבודת יד עם קצוות משופעים וגימור שמן טבעי יוקרתי.'
+            en: 'Sample description for Product 1. This is placeholder text for the template boilerplate.',
+            he: 'תיאור לדוגמה עבור מוצר 1. זהו מלל ממלא מקום עבור תבנית האתר.'
         },
-        category: [{ en: 'Furniture', he: 'רהיטים' }, { en: 'Dining Tables', he: 'שולחנות אוכל' }],
+        category: [{ en: 'Category 1', he: 'קטגוריה 1' }],
         price: [
-            { amount: 4800, variant: { en: 'Natural Oak (200cm)', he: 'אלון טבעי (200 ס״מ)' }, sku: 'TBL-OAK-200' },
-            { amount: 5600, variant: { en: 'Smoked Oak (240cm)', he: 'אלון מעושן (240 ס״מ)' }, sku: 'TBL-SMK-240' }
+            { amount: 150, variant: { en: 'Variant A', he: 'גרסה א׳' }, wood: { en: 'Variant A', he: 'גרסה א׳' }, sku: 'SKU-001-A' },
+            { amount: 180, variant: { en: 'Variant B', he: 'גרסה ב׳' }, wood: { en: 'Variant B', he: 'גרסה ב׳' }, sku: 'SKU-001-B' }
         ],
         imgsUrl: [
-            'https://images.unsplash.com/photo-1577140917170-285929fb55b7?q=80&w=1200&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1615066390971-03e4e1c36ddf?q=80&w=1200&auto=format&fit=crop'
+            '/images/placeholders/product-placeholder.svg'
         ],
-        size: [{ length: 200, width: 100, height: 75 }],
-        attributes: { material: 'Solid Oak', finish: 'Organic Natural Oil', leadTime: '21 business days' },
+        size: [{ length: 100, width: 50, height: 75 }],
+        attributes: { material: 'Material 1', color: 'Option A' },
+        woodType: [{ en: 'Variant A', he: 'גרסה א׳' }, { en: 'Variant B', he: 'גרסה ב׳' }],
+        material: [{ en: 'Material 1', he: 'חומר 1' }],
         is_active: true,
         is_new: true,
         is_featured: true
     },
     {
-        id: 'prod_ceramic_pendant',
-        name: { en: 'Wheel-Thrown Stoneware Pendant', he: 'אהיל קרמיקה תלוי בעבודת אבניים' },
+        id: 'prod_2',
+        name: { en: 'Product 2', he: 'מוצר 2' },
         description: {
-            en: 'Sculptural pendant lamp thrown on the wheel from iron-rich stoneware, finished with brushed brass hardware.',
-            he: 'גוף תאורה פיסולי תלוי שנעשה בעבודת אבניים מחימר עשיר בברזל, בשילוב חלקי פליז מוברש.'
+            en: 'Sample description for Product 2. This is placeholder text for the template boilerplate.',
+            he: 'תיאור לדוגמה עבור מוצר 2. זהו מלל ממלא מקום עבור תבנית האתר.'
         },
-        category: [{ en: 'Lighting', he: 'תאורה' }, { en: 'Pendants', he: 'גופי תאורה תלויים' }],
+        category: [{ en: 'Category 1', he: 'קטגוריה 1' }],
         price: [
-            { amount: 1450, variant: { en: 'Terracotta Matte', he: 'טרקוטה מט' }, sku: 'LGT-CRM-01' },
-            { amount: 1550, variant: { en: 'Chalk White', he: 'לבן גיר' }, sku: 'LGT-CRM-02' }
+            { amount: 250, variant: { en: 'Variant A', he: 'גרסה א׳' }, wood: { en: 'Variant A', he: 'גרסה א׳' }, sku: 'SKU-002-A' },
+            { amount: 300, variant: { en: 'Variant B', he: 'גרסה ב׳' }, wood: { en: 'Variant B', he: 'גרסה ב׳' }, sku: 'SKU-002-B' }
         ],
         imgsUrl: [
-            'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?q=80&w=1200&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1540932239986-30128078f3c5?q=80&w=1200&auto=format&fit=crop'
+            '/images/placeholders/product-placeholder.svg'
         ],
-        size: [{ diameter: 32, height: 28 }],
-        attributes: { material: 'Stoneware & Brass', socket: 'E27', maxWattage: '15W LED' },
-        is_active: true,
-        is_new: true,
-        is_featured: true
-    },
-    {
-        id: 'prod_boucle_chair',
-        name: { en: 'Curved Walnut Lounge Chair', he: 'כורסת לאונג עץ אגוז ובוקלה' },
-        description: {
-            en: 'Sculptural lounge chair crafted from steam-bent American walnut and tactile cream bouclé upholstery.',
-            he: 'כורסת לאונג בעיצוב פיסולי מעץ אגוז אמריקאי מכופף בריפוד בד בוקלה רך ויוקרתי.'
-        },
-        category: [{ en: 'Furniture', he: 'רהיטים' }, { en: 'Chairs', he: 'כורסאות' }],
-        price: [
-            { amount: 3200, variant: { en: 'Cream Bouclé', he: 'בוקלה שמנת' }, sku: 'CHR-BOU-01' },
-            { amount: 3400, variant: { en: 'Charcoal Wool', he: 'צמר פחם' }, sku: 'CHR-WOL-02' }
-        ],
-        imgsUrl: [
-            'https://images.unsplash.com/photo-1580481077195-c328ad4f3319?q=80&w=1200&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?q=80&w=1200&auto=format&fit=crop'
-        ],
-        size: [{ width: 82, depth: 80, height: 74 }],
-        attributes: { material: 'Solid Walnut & Italian Bouclé', warranty: '5 years' },
+        size: [{ length: 120, width: 60, height: 80 }],
+        attributes: { material: 'Material 1', color: 'Option B' },
+        woodType: [{ en: 'Variant A', he: 'גרסה א׳' }, { en: 'Variant B', he: 'גרסה ב׳' }],
+        material: [{ en: 'Material 1', he: 'חומר 1' }],
         is_active: true,
         is_new: false,
         is_featured: true
     },
     {
-        id: 'prod_brass_sconce',
-        name: { en: 'Architectural Brass Wall Sconce', he: 'גוף תאורה צמוד קיר פליז מוברש' },
+        id: 'prod_3',
+        name: { en: 'Product 3', he: 'מוצר 3' },
         description: {
-            en: 'Minimalist dual-emission wall sconce casting subtle indirect light up and down.',
-            he: 'גוף תאורה צמוד קיר מינימליסטי המפיץ אור עקיף עדין מעלה ומטה ליצירת אווירה נעימה.'
+            en: 'Sample description for Product 3. This is placeholder text for the template boilerplate.',
+            he: 'תיאור לדוגמה עבור מוצר 3. זהו מלל ממלא מקום עבור תבנית האתר.'
         },
-        category: [{ en: 'Lighting', he: 'תאורה' }, { en: 'Wall Sconces', he: 'תאורת קיר' }],
+        category: [{ en: 'Category 2', he: 'קטגוריה 2' }],
         price: [
-            { amount: 980, variant: { en: 'Brushed Brass', he: 'פליז מוברש' }, sku: 'LGT-WL-01' },
-            { amount: 980, variant: { en: 'Matte Black', he: 'שחור מט' }, sku: 'LGT-WL-02' }
+            { amount: 350, variant: { en: 'Variant A', he: 'גרסה א׳' }, wood: { en: 'Variant A', he: 'גרסה א׳' }, sku: 'SKU-003-A' },
+            { amount: 400, variant: { en: 'Variant B', he: 'גרסה ב׳' }, wood: { en: 'Variant B', he: 'גרסה ב׳' }, sku: 'SKU-003-B' }
         ],
         imgsUrl: [
-            'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?q=80&w=1200&auto=format&fit=crop'
+            '/images/placeholders/product-placeholder.svg'
         ],
-        size: [{ height: 26, width: 12, depth: 8 }],
-        attributes: { material: 'Solid Brass', lightSource: 'Integrated LED 2700K', ipRating: 'IP20' },
+        size: [{ diameter: 45, height: 35 }],
+        attributes: { material: 'Material 2', finish: 'Finish A' },
+        woodType: [{ en: 'Variant A', he: 'גרסה א׳' }, { en: 'Variant B', he: 'גרסה ב׳' }],
+        material: [{ en: 'Material 2', he: 'חומר 2' }],
+        is_active: true,
+        is_new: true,
+        is_featured: false
+    },
+    {
+        id: 'prod_4',
+        name: { en: 'Product 4', he: 'מוצר 4' },
+        description: {
+            en: 'Sample description for Product 4. This is placeholder text for the template boilerplate.',
+            he: 'תיאור לדוגמה עבור מוצר 4. זהו מלל ממלא מקום עבור תבנית האתר.'
+        },
+        category: [{ en: 'Category 2', he: 'קטגוריה 2' }],
+        price: [
+            { amount: 450, variant: { en: 'Standard', he: 'סטנדרטי' }, wood: { en: 'Standard', he: 'סטנדרטי' }, sku: 'SKU-004' }
+        ],
+        imgsUrl: [
+            '/images/placeholders/product-placeholder.svg'
+        ],
+        size: [{ width: 80, depth: 80, height: 75 }],
+        attributes: { material: 'Material 2', finish: 'Finish B' },
+        woodType: [{ en: 'Standard', he: 'סטנדרטי' }],
+        material: [{ en: 'Material 2', he: 'חומר 2' }],
+        is_active: true,
+        is_new: false,
+        is_featured: true
+    },
+    {
+        id: 'prod_5',
+        name: { en: 'Product 5', he: 'מוצר 5' },
+        description: {
+            en: 'Sample description for Product 5. This is placeholder text for the template boilerplate.',
+            he: 'תיאור לדוגמה עבור מוצר 5. זהו מלל ממלא מקום עבור תבנית האתר.'
+        },
+        category: [{ en: 'Category 3', he: 'קטגוריה 3' }],
+        price: [
+            { amount: 550, variant: { en: 'Standard', he: 'סטנדרטי' }, wood: { en: 'Standard', he: 'סטנדרטי' }, sku: 'SKU-005' }
+        ],
+        imgsUrl: [
+            '/images/placeholders/product-placeholder.svg'
+        ],
+        size: [{ diameter: 30, height: 60 }],
+        attributes: { material: 'Material 3', style: 'Modern' },
+        woodType: [{ en: 'Standard', he: 'סטנדרטי' }],
+        material: [{ en: 'Material 3', he: 'חומר 3' }],
+        is_active: true,
+        is_new: true,
+        is_featured: false
+    },
+    {
+        id: 'prod_6',
+        name: { en: 'Product 6', he: 'מוצר 6' },
+        description: {
+            en: 'Sample description for Product 6. This is placeholder text for the template boilerplate.',
+            he: 'תיאור לדוגמה עבור מוצר 6. זהו מלל ממלא מקום עבור תבנית האתר.'
+        },
+        category: [{ en: 'Category 3', he: 'קטגוריה 3' }],
+        price: [
+            { amount: 650, variant: { en: 'Variant A', he: 'גרסה א׳' }, wood: { en: 'Variant A', he: 'גרסה א׳' }, sku: 'SKU-006-A' },
+            { amount: 750, variant: { en: 'Variant B', he: 'גרסה ב׳' }, wood: { en: 'Variant B', he: 'גרסה ב׳' }, sku: 'SKU-006-B' }
+        ],
+        imgsUrl: [
+            '/images/placeholders/product-placeholder.svg'
+        ],
+        size: [{ length: 150, width: 80, height: 75 }],
+        attributes: { material: 'Material 3', style: 'Classic' },
+        woodType: [{ en: 'Variant A', he: 'גרסה א׳' }, { en: 'Variant B', he: 'גרסה ב׳' }],
+        material: [{ en: 'Material 3', he: 'חומר 3' }],
         is_active: true,
         is_new: false,
         is_featured: true
@@ -111,13 +160,18 @@ async function seed() {
             INSERT INTO public.users (id, username, password, fullname, role, price_multiplier, show_prices)
             VALUES 
                 ('usr_admin', 'admin@template.com', $1, 'Store Administrator', 'admin', 1.0, true),
-                ('usr_trade', 'partner@boutiquestudio.com', $2, 'Studio Architect Partner', 'client', 0.85, true)
-            ON CONFLICT (username) DO NOTHING;
+                ('usr_trade', 'partner@template.com', $2, 'Trade Partner', 'client', 0.85, true)
+            ON CONFLICT (username) DO UPDATE SET
+                password = EXCLUDED.password,
+                role = EXCLUDED.role;
         `;
         await dbService.query(userSql, [adminHash, partnerHash]);
         console.log('✅ Default users seeded:');
         console.log('   👤 Admin:   admin@template.com / Admin123!');
-        console.log('   👤 Partner: partner@boutiquestudio.com / Partner123! (15% discount)');
+        console.log('   👤 Partner: partner@template.com / Partner123! (15% discount)');
+
+        // Clear any old legacy sample products so we only have clean template products
+        await dbService.query(`DELETE FROM public.products WHERE id LIKE 'prod_%';`);
 
         // 2. Seed Products
         for (const p of DEMO_PRODUCTS) {
@@ -148,7 +202,7 @@ async function seed() {
                 p.is_featured
             ]);
         }
-        console.log(`✅ Seeded ${DEMO_PRODUCTS.length} sample boutique products.`);
+        console.log(`✅ Seeded ${DEMO_PRODUCTS.length} clean template products (Category 1, Category 2, Category 3).`);
 
         // 3. Seed Site Settings
         const settingsSql = `
@@ -186,7 +240,7 @@ async function seed() {
         ]);
         console.log('✅ Seeded default site media slots.');
 
-        console.log('\n🎉 Database seeding finished successfully! Storefront is ready to run.');
+        console.log('\n🎉 Database seeding finished successfully! Template boilerplate is ready.');
     } catch (err) {
         console.error('❌ Seeding error:', err);
         process.exit(1);
