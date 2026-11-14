@@ -151,19 +151,22 @@ async function seed() {
     }
 
     try {
-        // 1. Seed Users
+        // 1. Seed Users (clean up previous seed users to ensure idempotency)
         const saltRounds = 10;
         const adminHash = await bcrypt.hash('Admin123!', saltRounds);
         const partnerHash = await bcrypt.hash('Partner123!', saltRounds);
+
+        await dbService.query(`
+            DELETE FROM public.users 
+            WHERE id IN ('usr_admin', 'usr_trade') 
+               OR username IN ('admin@template.com', 'partner@template.com', 'partner@boutiquestudio.com');
+        `);
 
         const userSql = `
             INSERT INTO public.users (id, username, password, fullname, role, price_multiplier, show_prices)
             VALUES 
                 ('usr_admin', 'admin@template.com', $1, 'Store Administrator', 'admin', 1.0, true),
-                ('usr_trade', 'partner@template.com', $2, 'Trade Partner', 'client', 0.85, true)
-            ON CONFLICT (username) DO UPDATE SET
-                password = EXCLUDED.password,
-                role = EXCLUDED.role;
+                ('usr_trade', 'partner@template.com', $2, 'Trade Partner', 'client', 0.85, true);
         `;
         await dbService.query(userSql, [adminHash, partnerHash]);
         console.log('✅ Default users seeded:');
